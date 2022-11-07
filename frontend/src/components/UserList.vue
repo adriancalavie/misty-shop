@@ -1,13 +1,16 @@
-<template></template>
-
 <script setup>
-import { ref, computed } from "vue";
+import { computed } from "vue";
 
-const data = ref(null);
-const loading = ref(true);
-const error = ref(null);
-
-function fetchData() {
-  // TODO Implement this
-}
+const props = defineProps({
+  users: Array,
+  default() {
+    return [];
+  },
+});
+const items = computed(() => props.users);
 </script>
+<template>
+  <li v-for="(item, index) in items" :key="index">
+    {{ item.id }} - {{ item.username }}
+  </li>
+</template>
