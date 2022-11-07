@@ -1,5 +1,5 @@
 use axum::{
-    http::StatusCode,
+    http::{HeaderValue, Method, StatusCode},
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
@@ -8,6 +8,7 @@ use axum::{
 // use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
+use tower_http::cors::CorsLayer;
 use uuid::Uuid;
 
 #[tokio::main]
@@ -22,7 +23,16 @@ async fn main() {
         // `GET /` goes to `root`
         .route("/", get(root))
         // `POST /users` goes to `create_user`
-        .route("/users", post(create_user));
+        .route("/user", post(create_user))
+        .route(
+            "/users",
+            get(get_users).layer(
+                CorsLayer::new()
+                    // "*" allows all the path to have CORS access
+                    .allow_origin("*".parse::<HeaderValue>().unwrap())
+                    .allow_methods([Method::GET]),
+            ),
+        );
 
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
@@ -38,22 +48,36 @@ async fn root() -> &'static str {
     "Hello, World!"
 }
 
+async fn new_user(name: String) -> User {
+    User {
+        id: Uuid::new_v4().to_string(),
+        username: name,
+    }
+}
+
 async fn create_user(
     // this argument tells axum to parse the request body
     // as JSON into a `CreateUser` type
     Json(payload): Json<CreateUser>,
 ) -> impl IntoResponse {
     // insert your application logic here
-    let user = User {
-        id: Uuid::new_v4().to_string(),
-        username: payload.username,
-    };
+    let user: User = new_user(payload.username).await;
 
     // TODO Save user in db
 
     // this will be converted into a JSON response
     // with a status code of `201 Created`
     (StatusCode::CREATED, Json(user))
+}
+
+async fn get_users() -> impl IntoResponse {
+    let users = vec![
+        new_user("Adrian".to_owned()).await,
+        new_user("Diana".to_owned()).await,
+        new_user("Dinu".to_owned()).await,
+    ];
+
+    (StatusCode::OK, Json(users))
 }
 
 // the input to our `create_user` handler
