@@ -1,21 +1,25 @@
 <script lang="ts">
 	import { Badge, Button, Card, CardPlaceholder, Rating } from 'flowbite-svelte';
 
-	export let dataImported = false;
+	let link: string | null = null;
 	export let id: number;
-	const getImageUrl = () => {
-		const link = `https://api.slingacademy.com/public/sample-products/${id}.png`;
-		console.log(link);
-		return link;
-	};
-	let imageUrl = getImageUrl();
+
+	async function getImageUrl() {
+		console.log(`loading ${id}`);
+		return new Promise((resolve, reject) => {
+			link = `https://api.slingacademy.com/public/sample-products/${id}.png`;
+			resolve(link);
+		});
+	}
 </script>
 
 <div class="w-full">
-	{#if dataImported}
+	{#await getImageUrl()}
+		<CardPlaceholder class="w-full" padding="none" size="xl" />
+	{:then src}
 		<Card padding="none">
 			<a href="/">
-				<img class="rounded-20 mx-auto p-3" src={imageUrl} alt="product 1" />
+				<img class="rounded-20 mx-auto p-3" src={link} alt="product 1" />
 			</a>
 			<div class="px-5 pb-5">
 				<a href="/">
@@ -32,9 +36,9 @@
 				</div>
 			</div>
 		</Card>
-	{:else}
-		<CardPlaceholder class="w-full" padding="none" size="xl" />
-	{/if}
+	{:catch error}
+		<span>{`Error loading ${id}: ${error.message}`} </span>
+	{/await}
 </div>
 
 <style>
