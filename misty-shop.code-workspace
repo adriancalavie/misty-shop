@@ -7,4 +7,7 @@
 			"path": "frontend"
 		}
 	],
+	"settings": {
+		"rust-analyzer.showUnlinkedFileNotification": false
+	},
 }
