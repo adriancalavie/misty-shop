@@ -1,11 +1,8 @@
-
 use dotenv::dotenv;
-use postgrest::Postgrest;
-use reqwest::Response;
+use postgrest::{Builder, Postgrest};
 use tokio::sync::Mutex;
-
 pub struct Supabase {
-    pub client: Postgrest,
+    client: Postgrest,
 }
 
 impl Supabase {
@@ -20,8 +17,8 @@ impl Supabase {
         }
     }
 
-    pub async fn get_all_items(&self) -> Result<Response, reqwest::Error> {
-        self.client.from("items").select("*").execute().await
+    pub fn from(&self, table: &str) -> Builder {
+        self.client.from(table)
     }
 }
 
