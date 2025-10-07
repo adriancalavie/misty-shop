@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { createItem, deleteItem, getItemById, getItems, updateItem } from '../stores/items';
-import { asInt } from '../utils/queryString';
+import { cors } from 'hono/cors';
 
 const app = new Hono();
 
@@ -11,7 +11,6 @@ app.get('/', async c => {
 });
 
 app.post('/', async c => {
-  console.log('Creating item...');
   const body = await c.req.json();
   const result = await createItem(body);
   return c.json(result);
@@ -35,5 +34,7 @@ app.delete('/:id', async c => {
   const result = await deleteItem(id);
   return c.json(result);
 });
+
+app.use('/*', cors());
 
 export default app;

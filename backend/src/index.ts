@@ -7,7 +7,7 @@ const db = drizzle(process.env.DB_FILE_NAME!);
 
 const app = new Hono();
 
-app.route('/items', items);
 app.use('/*', cors());
+app.route('/items', items);
 
 export default app;
