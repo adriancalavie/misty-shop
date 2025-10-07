@@ -6,17 +6,9 @@
   "printWidth": 100,
   "semi": true,
   "bracketSpacing": true,
-  "bracketSameLine": false,
   "arrowParens": "avoid",
   "endOfLine": "lf",
-  "plugins": ["prettier-plugin-tailwindcss"],
   "overrides": [
-    {
-      "files": ["*.tsx", "*.jsx"],
-      "options": {
-        "parser": "typescript"
-      }
-    },
     {
       "files": ["*.ts"],
       "options": {
