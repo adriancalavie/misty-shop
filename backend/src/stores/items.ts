@@ -1,42 +1,60 @@
-import { Item } from '../models/item';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
+import { itemsTable } from '../db/schema';
+import { Item, ItemUpdate, NewItem } from '../models/item';
+import { asInt } from '../utils/queryString';
+import { eq } from 'drizzle-orm';
 
-// Mock
-export type GetOptions = {
-  limit?: number;
-  offset?: number;
-};
+const db = drizzle(process.env.DB_FILE_NAME!);
 
-const items: Item[] = [];
-
-export function getItems(opts: GetOptions): Item[] {
-  const offset = opts.offset || 0;
-  const limit = opts.limit ? offset + opts.limit : undefined;
-  return items.slice(offset, limit);
-}
-export function getItemById(id: string): Item | null {
-  return items.find(item => item.id === id) || null;
-}
-export function createItem(data: any): Item {
-  const newItem: Item = {
-    id: crypto.randomUUID(),
-    name: data.name,
-    description: data.description,
-    price: data.price,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+export async function getItems(opts: { limit: string; offset: string }): Promise<Item[]> {
+  const { limit, offset } = {
+    limit: asInt(opts.limit, 10),
+    offset: asInt(opts.offset, 0),
   };
-  items.push(newItem);
-  return newItem;
+  return db.select().from(itemsTable).limit(limit).offset(offset);
 }
-export function updateItem(id: string, data: any): Item | null {
-  const item = items.find(item => item.id === id);
-  if (!item) return null;
-  Object.assign(item, data, { updatedAt: new Date() });
-  return item;
+export async function getItemById(id: string): Promise<Item | null> {
+  const idNum = asInt(id, -1);
+  if (idNum === -1) return null;
+
+  const result = await db.select().from(itemsTable).where(eq(itemsTable.id, idNum));
+  return result[0] || null;
 }
-export function deleteItem(id: string): boolean {
-  const index = items.findIndex(item => item.id === id);
-  if (index === -1) return false;
-  items.splice(index, 1);
-  return true;
+
+export async function createItem(data: any): Promise<Item> {
+  const item: NewItem = {
+    name: data.name,
+    description: data.description || null,
+    price: data.price,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  console.log('Inserting item:', item);
+  const result = await db.insert(itemsTable).values(item).returning();
+  console.log('Inserted item:', result[0]);
+  return result[0];
+}
+export async function updateItem(id: string, data: any): Promise<Item | null> {
+  const existingItem = await getItemById(id);
+  if (!existingItem) return null;
+
+  const idNum = asInt(id, -1);
+  if (idNum === -1) return null;
+
+  const updatedItem: ItemUpdate = { ...data, updatedAt: new Date().toISOString() };
+  const result = await db
+    .update(itemsTable)
+    .set(updatedItem)
+    .where(eq(itemsTable.id, idNum))
+    .returning();
+
+  return result[0] || null;
+}
+
+export async function deleteItem(id: string): Promise<boolean> {
+  const idNum = asInt(id, -1);
+  if (idNum === -1) return false;
+
+  const result = await db.delete(itemsTable).where(eq(itemsTable.id, idNum)).returning();
+  return result.length > 0;
 }

@@ -1,33 +1,39 @@
 import { Hono } from 'hono';
 import { createItem, deleteItem, getItemById, getItems, updateItem } from '../stores/items';
-import { parseNumber } from '../utils/queryString';
+import { asInt } from '../utils/queryString';
 
 const app = new Hono();
 
-app.get('/', c => {
+app.get('/', async c => {
   const { limit, offset } = c.req.query();
-  return c.json(getItems({ limit: parseNumber(limit), offset: parseNumber(offset) }));
+  const result = await getItems({ limit, offset });
+  return c.json(result);
 });
 
 app.post('/', async c => {
+  console.log('Creating item...');
   const body = await c.req.json();
-  return c.json(createItem(body));
+  const result = await createItem(body);
+  return c.json(result);
 });
 
-app.get('/:id', c => {
+app.get('/:id', async c => {
   const { id } = c.req.param();
-  return c.json(getItemById(id));
+  const result = await getItemById(id);
+  return c.json(result);
 });
 
 app.put('/:id', async c => {
   const { id } = c.req.param();
   const body = await c.req.json();
-  return c.json(updateItem(id, body));
+  const result = await updateItem(id, body);
+  return c.json(result);
 });
 
-app.delete('/:id', c => {
+app.delete('/:id', async c => {
   const { id } = c.req.param();
-  return c.json(deleteItem(id));
+  const result = await deleteItem(id);
+  return c.json(result);
 });
 
 export default app;

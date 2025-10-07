@@ -1,4 +1,7 @@
-export function parseNumber<QueryString extends string>(value: QueryString): number | undefined {
+export function asInt<QueryStringInteger extends string>(
+  value: QueryStringInteger,
+  defaultValue: number = 0
+): number {
   const parsed = parseInt(value, 10);
-  return isNaN(parsed) ? undefined : parsed;
+  return isNaN(parsed) ? defaultValue : parsed;
 }
